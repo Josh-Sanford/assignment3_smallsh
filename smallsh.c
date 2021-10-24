@@ -1,6 +1,3 @@
-/* main.c */
-/* 0 copyright/licensing */
-/* 1 includes */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,11 +5,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "storeCommand.h"
-/* 2 defines */
-/* 3 external declarations */
-/* 4 typedefs */
-/* 5 global variable declarations */
-/* 6 function prototypes */
+#include "expandVariables.h"
 
 /*
 pid_t getpid(void);
@@ -39,7 +32,7 @@ command [arg1 arg2 ...] [< input_file] [> output_file] [&]
 
 
 int main(int argc, char *argv[]) {
-    /* getline() functionality adopted from https://c-for-dummies.com/blog/?p=1112
+    /* getline() functionality adapted from https://c-for-dummies.com/blog/?p=1112
      */
     while(1) {
         char *buffer;
@@ -64,28 +57,32 @@ int main(int argc, char *argv[]) {
         if (strcmp(buffer, "\n") == 0) {
             printf("I think this is a blank line.\n");
         } else {
-        struct commandLine command = storeCommand(buffer);
-        // Debug correct elements stored in command struct
-        /*
-        printf("Command stored in command.command: %s\n", command.command);
-        int i = 0;
-        while (command.arguments[i] != NULL) {
-            printf("command.arguments[%d] = %s\n", i, command.arguments[i]);
-            i += 1;
-        }
-        printf("Input_file: %s\n", command.input_file);
-        printf("Output_file: %s\n", command.output_file);
-        printf("Ampersand: %s\n", command.ampersand);
-        */
+            // Get the pid of smallsh and convert it to a string
+            char pid_string[50];
+            sprintf(pid_string, "%d", getpid());
+            fflush(stdout);
 
-        // Check for comment
-        if (strcmp(command.command, "#") == 0) {
-            continue;
-        } else {
-            // Do stuff
-        }
+            // Expand any $$ variables
+            buffer = expandVariables(buffer, "$$", pid_string);
+            printf("After expansion: %s\n", buffer);
+
+            // Store the user's command line input
+            struct commandLine command = storeCommand(buffer);
+            // Debug correct elements stored in command struct
+            printf("Command stored in command.command: %s\n", command.command);
+            int i = 0;
+            while (command.arguments[i] != NULL) {
+                printf("command.arguments[%d] = %s\n", i, command.arguments[i]);
+                i += 1;
+            }
+            printf("Input_file: %s\n", command.input_file);
+            printf("Output_file: %s\n", command.output_file);
+            printf("Ampersand: %s\n", command.ampersand);
+
+            // Check for comment
+            if (strcmp(command.command, "#") == 0) {
+                continue;
+            }
         }
     }
 }
-
-/* 8 function declarations */
