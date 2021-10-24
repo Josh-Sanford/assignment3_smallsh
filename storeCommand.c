@@ -6,13 +6,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-struct commandLine {
-    char *command;
-    char *arguments[512];
-    char *input_file;
-    char *output_file;
-    char *ampersand;
-};
 
 /* Separates the user's command line input by spaces and stores
  * the components in the commandLine struct
@@ -24,8 +17,16 @@ struct commandLine storeCommand(char *buffer) {
     
     char *token = strtok(buffer, " ");
     printf("The first token is %s\n", token);
+
     // Store the first token as the command in the struct
     command.command = token;
+
+    // Check first token for # to see if it is a comment
+    if (strcmp(token, "#") == 0) {
+        return command;
+    }
+
+    // Progress to next token
     token = strtok(NULL, " ");
 
     // Store arguments until < or > or & is encountered

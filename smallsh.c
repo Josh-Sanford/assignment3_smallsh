@@ -37,13 +37,6 @@ int execve(const char *pathname, char *const argv[], char *const envp[]);
 command [arg1 arg2 ...] [< input_file] [> output_file] [&]
 */
 
-struct commandLine {
-    char *command;
-    char *arguments[512];
-    char *input_file;
-    char *output_file;
-    char *ampersand;
-};
 
 int main(int argc, char *argv[]) {
     /* getline() functionality adopted from https://c-for-dummies.com/blog/?p=1112
@@ -62,10 +55,18 @@ int main(int argc, char *argv[]) {
         printf(": ");
         // getline() returns the number of characters read
         input = getline(&buffer, &buffsize, stdin);
+        
+        /* Debug getline()
         printf("%zu characters were read.\n", input);
         printf("You typed: '%s'\n", buffer);
+        */
+        
+        if (strcmp(buffer, "\n") == 0) {
+            printf("I think this is a blank line.\n");
+        } else {
         struct commandLine command = storeCommand(buffer);
         // Debug correct elements stored in command struct
+        /*
         printf("Command stored in command.command: %s\n", command.command);
         int i = 0;
         while (command.arguments[i] != NULL) {
@@ -75,6 +76,15 @@ int main(int argc, char *argv[]) {
         printf("Input_file: %s\n", command.input_file);
         printf("Output_file: %s\n", command.output_file);
         printf("Ampersand: %s\n", command.ampersand);
+        */
+
+        // Check for comment
+        if (strcmp(command.command, "#") == 0) {
+            continue;
+        } else {
+            // Do stuff
+        }
+        }
     }
 }
 
