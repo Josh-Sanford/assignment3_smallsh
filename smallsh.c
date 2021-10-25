@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include "storeCommand.h"
 #include "expandVariables.h"
+#include "exitShell.h"
+#include "changeDirectory.h"
 
 /*
 pid_t getpid(void);
@@ -63,18 +65,19 @@ int main(int argc, char *argv[]) {
             fflush(stdout);
 
             // Expand any $$ variables
-            buffer = expandVariables(buffer, "$$", pid_string);
-            printf("After expansion: %s\n", buffer);
+            //buffer = expandVariables(buffer, "$$", pid_string);
+            //printf("After expansion: %s\n", buffer);
 
             // Store the user's command line input
             struct commandLine command = storeCommand(buffer);
             // Debug correct elements stored in command struct
             printf("Command stored in command.command: %s\n", command.command);
-            int i = 0;
+            printf("First argument stored is: %s\n", command.arguments[0]);
+            /*int i = 0;
             while (command.arguments[i] != NULL) {
                 printf("command.arguments[%d] = %s\n", i, command.arguments[i]);
                 i += 1;
-            }
+            }*/
             printf("Input_file: %s\n", command.input_file);
             printf("Output_file: %s\n", command.output_file);
             printf("Ampersand: %s\n", command.ampersand);
@@ -83,6 +86,19 @@ int main(int argc, char *argv[]) {
             if (strcmp(command.command, "#") == 0) {
                 continue;
             }
+
+            // Remove newline characters from the command
+            command.command[strcspn(command.command, "\n")] = 0;
+            
+            // Check for built-in commands
+            if (strcmp(command.command, "exit") == 0) {
+                exitShell();
+            } else if (strcmp(command.command, "cd") == 0) {
+                changeDirectory(command.arguments[0]);
+            }
+
+            // Clear memory of the command struct for the next loop
+            memset(&command, 0, sizeof(command));
         }
     }
 }
