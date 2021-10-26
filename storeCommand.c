@@ -19,15 +19,20 @@ struct commandLine storeCommand(char *buffer) {
     printf("The first token is %s\n", token);
 
     // Store the first token as the command in the struct
-    command.command = token;
+    //command.command = token;
+    command.arguments[0] = token;
 
     // Check first token for # to see if it is a comment
     if (strcmp(token, "#") == 0) {
         return command;
     }
 
+    // Add command to first index of arguments since it seems
+    // that's how execvp() wants the arguments array to be
+    //command.arguments[0] = token;
+
     // Progress to next token
-    token = strtok(NULL, " ");
+    //token = strtok(NULL, " ");
 
     // Store arguments until < or > or & is encountered
     printf("Storing these arguments:\n");
@@ -38,6 +43,8 @@ struct commandLine storeCommand(char *buffer) {
         argumentIndex += 1;
         token = strtok(NULL, " ");
     }
+    // Add null pointer to end of arguments array for use with execvp later
+    command.arguments[argumentIndex] = NULL;
     printf("End of arguments.\n");
     
     // Get the rest of the tokens

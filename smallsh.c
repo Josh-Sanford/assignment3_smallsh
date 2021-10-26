@@ -8,6 +8,8 @@
 #include "expandVariables.h"
 #include "exitShell.h"
 #include "changeDirectory.h"
+#include "getStatus.h"
+#include "executeCommand.h"
 
 /*
 pid_t getpid(void);
@@ -40,6 +42,7 @@ int main(int argc, char *argv[]) {
         char *buffer;
         size_t buffsize = 2048;
         size_t input;
+        int wstatus = 0;
 
         buffer = (char *)malloc(buffsize * sizeof(char));
         if (buffer == NULL) {
@@ -71,8 +74,9 @@ int main(int argc, char *argv[]) {
             // Store the user's command line input
             struct commandLine command = storeCommand(buffer);
             // Debug correct elements stored in command struct
-            printf("Command stored in command.command: %s\n", command.command);
+            //printf("Command stored in command.command: %s\n", command.command);
             printf("First argument stored is: %s\n", command.arguments[0]);
+            printf("Second argument stored is: %s\n", command.arguments[1]);
             /*int i = 0;
             while (command.arguments[i] != NULL) {
                 printf("command.arguments[%d] = %s\n", i, command.arguments[i]);
@@ -83,18 +87,26 @@ int main(int argc, char *argv[]) {
             printf("Ampersand: %s\n", command.ampersand);
 
             // Check for comment
-            if (strcmp(command.command, "#") == 0) {
+            if (strcmp(command.arguments[0], "#") == 0) {
                 continue;
             }
 
             // Remove newline characters from the command
-            command.command[strcspn(command.command, "\n")] = 0;
-            
+            //command.command[strcspn(command.command, "\n")] = 0;
+            command.arguments[0][strcspn(command.arguments[0], "\n")] = 0;
+            if (command.arguments[1] != NULL) {
+                command.arguments[1][strcspn(command.arguments[1], "\n")] = 0;
+            }
             // Check for built-in commands
-            if (strcmp(command.command, "exit") == 0) {
+            if (strcmp(command.arguments[0], "exit") == 0) {
                 exitShell();
-            } else if (strcmp(command.command, "cd") == 0) {
-                changeDirectory(command.arguments[0]);
+            } else if (strcmp(command.arguments[0], "cd") == 0) {
+                changeDirectory(command.arguments[1]);
+            } else if (strcmp(command.arguments[0], "status") == 0) {
+                getStatus(&wstatus);
+            } else {
+                wstatus = executeCommand(command);
+                printf("wstatus after executeCommand: %d\n", wstatus);
             }
 
             // Clear memory of the command struct for the next loop

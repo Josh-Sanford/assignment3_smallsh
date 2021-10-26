@@ -2,7 +2,7 @@
 #define STORECOMMAND_H
 
 struct commandLine {
-    char *command;
+    //char *command;
     char *arguments[512];
     char *input_file;
     char *output_file;
