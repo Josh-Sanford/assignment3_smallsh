@@ -37,7 +37,8 @@ struct commandLine storeCommand(char *buffer) {
     // Store arguments until < or > or & is encountered
     printf("Storing these arguments:\n");
     int argumentIndex = 0;
-    while (token != NULL && strcmp(token, "<") != 0 && strcmp(token, ">") != 0 && strcmp(token, "&") != 0) {
+    while (token != NULL && strcmp(token, "<") != 0 && strcmp(token, ">") != 0 && strcmp(token, "&") != 0
+    && strcmp(token, "&\n") != 0) {
         printf("%s\n", token);
         command.arguments[argumentIndex] = token;
         argumentIndex += 1;

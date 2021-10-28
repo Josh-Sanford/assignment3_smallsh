@@ -33,7 +33,7 @@ int execve(const char *pathname, char *const argv[], char *const envp[]);
 
 command [arg1 arg2 ...] [< input_file] [> output_file] [&]
 */
-
+int wstatus = 0;
 
 int main(int argc, char *argv[]) {
     /* getline() functionality adapted from https://c-for-dummies.com/blog/?p=1112
@@ -42,7 +42,6 @@ int main(int argc, char *argv[]) {
         char *buffer;
         size_t buffsize = 2048;
         size_t input;
-        int wstatus = 0;
 
         buffer = (char *)malloc(buffsize * sizeof(char));
         if (buffer == NULL) {
@@ -94,8 +93,19 @@ int main(int argc, char *argv[]) {
             // Remove newline characters from the command
             //command.command[strcspn(command.command, "\n")] = 0;
             command.arguments[0][strcspn(command.arguments[0], "\n")] = 0;
-            if (command.arguments[1] != NULL) {
+            /*if (command.arguments[1] != NULL) {
                 command.arguments[1][strcspn(command.arguments[1], "\n")] = 0;
+            }*/
+            int i = 1;
+            while (command.arguments[i] != NULL) {
+                command.arguments[i][strcspn(command.arguments[i], "\n")] = 0;
+                i += 1;
+            }
+            if (command.input_file != NULL) {
+                command.input_file[strcspn(command.input_file, "\n")] = 0;
+            }
+            if (command.output_file != NULL) {
+                command.output_file[strcspn(command.output_file, "\n")] = 0;
             }
             // Check for built-in commands
             if (strcmp(command.arguments[0], "exit") == 0) {
