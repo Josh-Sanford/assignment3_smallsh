@@ -34,6 +34,8 @@ int execve(const char *pathname, char *const argv[], char *const envp[]);
 command [arg1 arg2 ...] [< input_file] [> output_file] [&]
 */
 int wstatus = 0;
+pid_t childProcesses[100];
+
 
 int main(int argc, char *argv[]) {
     /* getline() functionality adapted from https://c-for-dummies.com/blog/?p=1112
@@ -49,6 +51,23 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
 
+        /*printf("Current child process: %d\n", childProcesses[0]);
+        fflush(stdout);
+        if (childProcesses[0] == NULL) {
+            childProcesses[0] = 1;
+        }
+        // Check for completed background child processes
+        if (childProcesses != NULL) {
+            int index = 0;
+            while(childProcesses[index] != NULL) {
+                int status;
+                pid_t checkPid = waitpid(childProcesses[index], &status, WNOHANG);
+                if (checkPid == childProcesses[index]) {
+                    printf("background pid %d is done\n", checkPid);
+                }
+                index += 1;
+            }
+        }*/
         printf(": ");
         // getline() returns the number of characters read
         input = getline(&buffer, &buffsize, stdin);
@@ -59,7 +78,8 @@ int main(int argc, char *argv[]) {
         */
         
         if (strcmp(buffer, "\n") == 0) {
-            printf("I think this is a blank line.\n");
+            //printf("I think this is a blank line.\n");
+            continue;
         } else {
             // Get the pid of smallsh and convert it to a string
             char pid_string[50];
@@ -67,23 +87,23 @@ int main(int argc, char *argv[]) {
             fflush(stdout);
 
             // Expand any $$ variables
-            //buffer = expandVariables(buffer, "$$", pid_string);
+            buffer = expandVariables(buffer, "$$", pid_string);
             //printf("After expansion: %s\n", buffer);
 
             // Store the user's command line input
             struct commandLine command = storeCommand(buffer);
             // Debug correct elements stored in command struct
             //printf("Command stored in command.command: %s\n", command.command);
-            printf("First argument stored is: %s\n", command.arguments[0]);
-            printf("Second argument stored is: %s\n", command.arguments[1]);
+            //printf("First argument stored is: %s\n", command.arguments[0]);
+            //printf("Second argument stored is: %s\n", command.arguments[1]);
             /*int i = 0;
             while (command.arguments[i] != NULL) {
                 printf("command.arguments[%d] = %s\n", i, command.arguments[i]);
                 i += 1;
             }*/
-            printf("Input_file: %s\n", command.input_file);
-            printf("Output_file: %s\n", command.output_file);
-            printf("Ampersand: %s\n", command.ampersand);
+            //printf("Input_file: %s\n", command.input_file);
+            //printf("Output_file: %s\n", command.output_file);
+            //printf("Ampersand: %s\n", command.ampersand);
 
             // Check for comment
             if (strcmp(command.arguments[0], "#") == 0) {
@@ -107,6 +127,9 @@ int main(int argc, char *argv[]) {
             if (command.output_file != NULL) {
                 command.output_file[strcspn(command.output_file, "\n")] = 0;
             }
+            if (command.ampersand != NULL) {
+                command.ampersand[strcspn(command.ampersand, "\n")] = 0;
+            }
             // Check for built-in commands
             if (strcmp(command.arguments[0], "exit") == 0) {
                 exitShell();
@@ -115,8 +138,8 @@ int main(int argc, char *argv[]) {
             } else if (strcmp(command.arguments[0], "status") == 0) {
                 getStatus(&wstatus);
             } else {
-                wstatus = executeCommand(command);
-                printf("wstatus after executeCommand: %d\n", wstatus);
+                wstatus = executeCommand(command, childProcesses);
+                //printf("wstatus after executeCommand: %d\n", wstatus);
             }
 
             // Clear memory of the command struct for the next loop

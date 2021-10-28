@@ -35,22 +35,22 @@ struct commandLine storeCommand(char *buffer) {
     //token = strtok(NULL, " ");
 
     // Store arguments until < or > or & is encountered
-    printf("Storing these arguments:\n");
+    //printf("Storing these arguments:\n");
     int argumentIndex = 0;
     while (token != NULL && strcmp(token, "<") != 0 && strcmp(token, ">") != 0 && strcmp(token, "&") != 0
     && strcmp(token, "&\n") != 0) {
-        printf("%s\n", token);
+        //printf("%s\n", token);
         command.arguments[argumentIndex] = token;
         argumentIndex += 1;
         token = strtok(NULL, " ");
     }
     // Add null pointer to end of arguments array for use with execvp later
     command.arguments[argumentIndex] = NULL;
-    printf("End of arguments.\n");
+    //printf("End of arguments.\n");
     
     // Get the rest of the tokens
     while (token != NULL) {
-        printf("%s\n", token);
+        //printf("%s\n", token);
 
         // Check for <
         if (strcmp(token, "<") == 0) {
@@ -60,7 +60,7 @@ struct commandLine storeCommand(char *buffer) {
                 perror("No input file provided");
                 break;
             }
-            printf("input file found: %s\n", token);
+            //printf("input file found: %s\n", token);
             command.input_file = token;
         }
 
@@ -71,12 +71,12 @@ struct commandLine storeCommand(char *buffer) {
                 perror("No output file provided.");
                 break;
             }
-            printf("output file found: %s\n", token);
+            //printf("output file found: %s\n", token);
             command.output_file = token;
         }
 
         if (strcmp(token, "&") == 0 || strcmp(token, "&\n") == 0) {
-            printf("ampersand found: %s\n", token);
+            //printf("ampersand found: %s\n", token);
             command.ampersand = token;
         }
         token = strtok(NULL, " ");
