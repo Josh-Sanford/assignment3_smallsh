@@ -15,9 +15,10 @@ void getStatus(int *wstatus) {
         printf("exit status %d\n", *wstatus);
     } else if (WIFEXITED(wstatus)) {
         printf("exit status %d\n", WEXITSTATUS(wstatus));
-    } else if (WIFSIGNALED(wstatus)) {
-        printf("termination signal %d\n", WTERMSIG(wstatus));
+    /*} else if (WIFSIGNALED(wstatus)) {
+        printf("termination signal %d\n", WTERMSIG(wstatus));*/
     } else {
-        perror("Status could not be found.\n");
+        printf("exit value 1\n");
+        //perror("Status could not be found.\n");
     }
 }

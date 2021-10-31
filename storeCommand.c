@@ -13,10 +13,10 @@
 struct commandLine storeCommand(char *buffer) {
     struct commandLine command;
 
-    printf("The buffer passed to parseCommand() is %s\n", buffer);
+    //printf("The buffer passed to parseCommand() is %s\n", buffer);
     
     char *token = strtok(buffer, " ");
-    printf("The first token is %s\n", token);
+    //printf("The first token is %s\n", token);
 
     // Store the first token as the command in the struct
     //command.command = token;
@@ -61,7 +61,7 @@ struct commandLine storeCommand(char *buffer) {
                 break;
             }
             //printf("input file found: %s\n", token);
-            command.input_file = token;
+            command.input_file = token; // TODO: os1 puts printf in here
         }
 
         if (strcmp(token, ">") == 0) {

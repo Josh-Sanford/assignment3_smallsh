@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
 #include "storeCommand.h"
 #include "expandVariables.h"
 #include "exitShell.h"
@@ -11,39 +12,30 @@
 #include "getStatus.h"
 #include "executeCommand.h"
 
-/*
-pid_t getpid(void);
 
-pid_t fork(void);
+void handle_SIGINT(int signo) {
+    char* message = "Caught SIGINT, sleeping for 10 seconds\n";
+	write(STDOUT_FILENO, message, 39);
+	// Sleep for 10 seconds
+	sleep(10);
+}
 
-void exit(int status);
-
-pid_t wait(int *wstatus);
-
-pid_t waitpid(pid_t pid, int *wstatus, int options);
-wstatus: WIFEXITED(wstatus), WEXITSTATUS(wstatus), WIFSIGNALED(wstatus), WTERMSIG(wstatus)
-options: WNOHANG
-
-int execl(const char *pathname, const char *arg, ...  (char  *) NULL );
-int execlp(const char *filename, const char *arg, ...  (char  *) NULL );
-int execle(const char *pathname, const char *arg, ...  , (char *) NULL, char * const envp[]);
-int execv(const char *pathname, char *const argv[]);
-int execvp(const char *filename, char *const argv[]);
-int execve(const char *pathname, char *const argv[], char *const envp[]);
-
-command [arg1 arg2 ...] [< input_file] [> output_file] [&]
-*/
 int wstatus = 0;
 pid_t childProcesses[100];
 
-
 int main(int argc, char *argv[]) {
-    /* getline() functionality adapted from https://c-for-dummies.com/blog/?p=1112
-     */
+    // getline() functionality adapted from https://c-for-dummies.com/blog/?p=1112
+    /*
+    struct sigaction SIGINT_action = {0};
+    SIGINT_action.sa_handler = handle_SIGINT;
+    sigfillset(&SIGINT_action.sa_mask);
+    SIGINT_action.sa_flags = 0;
+    sigaction(SIGINT, &SIGINT_action, NULL);*/
+
     while(1) {
         char *buffer;
         size_t buffsize = 2048;
-        size_t input;
+        size_t input = 0;
 
         buffer = (char *)malloc(buffsize * sizeof(char));
         if (buffer == NULL) {
@@ -69,6 +61,7 @@ int main(int argc, char *argv[]) {
             }
         }*/
         printf(": ");
+        fflush(stdout);
         // getline() returns the number of characters read
         input = getline(&buffer, &buffsize, stdin);
         
@@ -87,23 +80,24 @@ int main(int argc, char *argv[]) {
             fflush(stdout);
 
             // Expand any $$ variables
+            printf("Before expandVariables\n");
+            fflush(stdout);
             buffer = expandVariables(buffer, "$$", pid_string);
-            //printf("After expansion: %s\n", buffer);
-
+            printf("After expandVariables\n");
+            fflush(stdout);
             // Store the user's command line input
             struct commandLine command = storeCommand(buffer);
             // Debug correct elements stored in command struct
-            //printf("Command stored in command.command: %s\n", command.command);
-            //printf("First argument stored is: %s\n", command.arguments[0]);
-            //printf("Second argument stored is: %s\n", command.arguments[1]);
+            printf("First argument stored is: %s\n", command.arguments[0]);
+            printf("Second argument stored is: %s\n", command.arguments[1]);
             /*int i = 0;
             while (command.arguments[i] != NULL) {
                 printf("command.arguments[%d] = %s\n", i, command.arguments[i]);
                 i += 1;
             }*/
-            //printf("Input_file: %s\n", command.input_file);
-            //printf("Output_file: %s\n", command.output_file);
-            //printf("Ampersand: %s\n", command.ampersand);
+            printf("Input_file: %s\n", command.input_file);
+            printf("Output_file: %s\n", command.output_file);
+            printf("Ampersand: %s\n", command.ampersand);
 
             // Check for comment
             if (strcmp(command.arguments[0], "#") == 0) {
@@ -111,24 +105,20 @@ int main(int argc, char *argv[]) {
             }
 
             // Remove newline characters from the command
-            //command.command[strcspn(command.command, "\n")] = 0;
-            command.arguments[0][strcspn(command.arguments[0], "\n")] = 0;
-            /*if (command.arguments[1] != NULL) {
-                command.arguments[1][strcspn(command.arguments[1], "\n")] = 0;
-            }*/
+            command.arguments[0][strcspn(command.arguments[0], "\n")] = '\0';
             int i = 1;
             while (command.arguments[i] != NULL) {
-                command.arguments[i][strcspn(command.arguments[i], "\n")] = 0;
+                command.arguments[i][strcspn(command.arguments[i], "\n")] = '\0';
                 i += 1;
             }
             if (command.input_file != NULL) {
-                command.input_file[strcspn(command.input_file, "\n")] = 0;
+                command.input_file[strcspn(command.input_file, "\n")] = '\0';
             }
             if (command.output_file != NULL) {
-                command.output_file[strcspn(command.output_file, "\n")] = 0;
+                command.output_file[strcspn(command.output_file, "\n")] = '\0';
             }
             if (command.ampersand != NULL) {
-                command.ampersand[strcspn(command.ampersand, "\n")] = 0;
+                command.ampersand[strcspn(command.ampersand, "\n")] = '\0';
             }
             // Check for built-in commands
             if (strcmp(command.arguments[0], "exit") == 0) {
@@ -143,6 +133,7 @@ int main(int argc, char *argv[]) {
             }
 
             // Clear memory of the command struct for the next loop
+            free(buffer);
             memset(&command, 0, sizeof(command));
         }
     }

@@ -106,7 +106,7 @@ int executeCommand(struct commandLine command, int childProcesses[100]) {
         //printf("CHILD(%d) running %s command\n", getpid(), command.arguments[0]);
         execvp(command.arguments[0], command.arguments);
         perror("excevp"); // execv only returns if there is an error
-        exit(2);
+        exit(1);
     } else {
         // Parent process executes this to
         if (command.ampersand != NULL) {
