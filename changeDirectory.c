@@ -21,11 +21,13 @@ void changeDirectory(char *path) {
     
     // Debug path
     printf("Value stored in path is: %s\n", path);
+    fflush(stdout);
     // Check if argument is still NULL ?
 
     // Print working directory for debugging
     char s[100];
     printf("%s\n", getcwd(s, 100));
+    fflush(stdout);
     
     // Change the directory
     int change = chdir(path);
@@ -35,4 +37,5 @@ void changeDirectory(char *path) {
     // Print directory changed to
     char n[100];
     printf("%s\n", getcwd(n, 100));
+    fflush(stdout);
 }

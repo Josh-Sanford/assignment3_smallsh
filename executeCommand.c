@@ -5,13 +5,14 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h>
 #include "storeCommand.h"
 
 /*
  * Execute the command input by the user
  * Returns the status of the child process
  */
-int executeCommand(struct commandLine command, int childProcesses[100]) {
+int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
     int childStatus = -5;
     //printf("Parent process' pid = %d\n", getpid());
 
@@ -24,12 +25,16 @@ int executeCommand(struct commandLine command, int childProcesses[100]) {
         exit(1);
     } else if (firstChild == 0) {
         // The first child process will execute this
-
         // Check if background process 
         if (command.ampersand != NULL) {
             if (strcmp(command.ampersand, "&") == 0) {
                 printf("background pid is %d\n", getpid());
+                fflush(stdout);
             }
+        } else {
+            struct sigaction SIGINT_action = {0};
+            SIGINT_action.sa_handler = SIG_DFL;
+            sigaction(SIGINT, &SIGINT_action, NULL);
         }
         // Input redirection
         if (command.input_file != NULL) {
@@ -43,6 +48,7 @@ int executeCommand(struct commandLine command, int childProcesses[100]) {
             }
             // Written to terminal
             printf("sourceFD == %d\n", sourceFD);
+            fflush(stdout);
 
             // Redirect stdin to source file
             int input_result = dup2(sourceFD, 0);
@@ -144,6 +150,7 @@ int executeCommand(struct commandLine command, int childProcesses[100]) {
                 pid_t checkPid = waitpid(childProcesses[index], &status, WNOHANG);
                 if (checkPid == childProcesses[index]) {
                     printf("background pid %d is done\n", checkPid);
+                    fflush(stdout);
                 }
                 index += 1;
             }

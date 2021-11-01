@@ -13,12 +13,15 @@
 void getStatus(int *wstatus) {
     if (*wstatus == 0) {
         printf("exit status %d\n", *wstatus);
+        fflush(stdout);
     } else if (WIFEXITED(wstatus)) {
         printf("exit status %d\n", WEXITSTATUS(wstatus));
+        fflush(stdout);
     /*} else if (WIFSIGNALED(wstatus)) {
         printf("termination signal %d\n", WTERMSIG(wstatus));*/
     } else {
         printf("exit value 1\n");
+        fflush(stdout);
         //perror("Status could not be found.\n");
     }
 }

@@ -10,8 +10,9 @@
 /* Separates the user's command line input by spaces and stores
  * the components in the commandLine struct
  */
-struct commandLine storeCommand(char *buffer) {
-    struct commandLine command;
+struct commandLine* storeCommand(char *buffer) {
+    //struct commandLine command;
+    struct commandLine *command = malloc(sizeof(struct commandLine));
 
     //printf("The buffer passed to parseCommand() is %s\n", buffer);
     
@@ -20,7 +21,7 @@ struct commandLine storeCommand(char *buffer) {
 
     // Store the first token as the command in the struct
     //command.command = token;
-    command.arguments[0] = token;
+    command->arguments[0] = token;
 
     // Check first token for # to see if it is a comment
     if (strcmp(token, "#") == 0) {
@@ -40,12 +41,12 @@ struct commandLine storeCommand(char *buffer) {
     while (token != NULL && strcmp(token, "<") != 0 && strcmp(token, ">") != 0 && strcmp(token, "&") != 0
     && strcmp(token, "&\n") != 0) {
         //printf("%s\n", token);
-        command.arguments[argumentIndex] = token;
+        command->arguments[argumentIndex] = token;
         argumentIndex += 1;
         token = strtok(NULL, " ");
     }
     // Add null pointer to end of arguments array for use with execvp later
-    command.arguments[argumentIndex] = NULL;
+    command->arguments[argumentIndex] = NULL;
     //printf("End of arguments.\n");
     
     // Get the rest of the tokens
@@ -61,7 +62,7 @@ struct commandLine storeCommand(char *buffer) {
                 break;
             }
             //printf("input file found: %s\n", token);
-            command.input_file = token; // TODO: os1 puts printf in here
+            command->input_file = token; // TODO: os1 puts printf in here
         }
 
         if (strcmp(token, ">") == 0) {
@@ -72,16 +73,16 @@ struct commandLine storeCommand(char *buffer) {
                 break;
             }
             //printf("output file found: %s\n", token);
-            command.output_file = token;
+            command->output_file = token;
         }
 
         if (strcmp(token, "&") == 0 || strcmp(token, "&\n") == 0) {
-            //printf("ampersand found: %s\n", token);
-            command.ampersand = token;
+            printf("ampersand found: %s\n", token);
+            fflush(stdout);
+            command->ampersand = token;
         }
         token = strtok(NULL, " ");
     }
 
     return command;
-
 }
