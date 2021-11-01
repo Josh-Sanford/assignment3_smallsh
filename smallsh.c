@@ -26,7 +26,6 @@ int main(int argc, char *argv[]) {
     while(1) {
         char *buffer;
         size_t buffsize = 2048;
-        size_t input = 0;
 
         buffer = (char *)malloc(buffsize * sizeof(char));
         if (buffer == NULL) {
@@ -54,7 +53,7 @@ int main(int argc, char *argv[]) {
         printf(": ");
         fflush(stdout);
         // getline() returns the number of characters read
-        input = getline(&buffer, &buffsize, stdin);
+        getline(&buffer, &buffsize, stdin);
         
         /* Debug getline()
         printf("%zu characters were read.\n", input);
@@ -131,7 +130,7 @@ int main(int argc, char *argv[]) {
             // Clear memory of the command struct for the next loop
             free(buffer);
             free(command);
-            memset(&command, 0, sizeof(command));
+            //memset(&command, 0, sizeof(command));
         }
     }
 }

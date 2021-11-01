@@ -25,13 +25,14 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
         exit(1);
     } else if (firstChild == 0) {
         // The first child process will execute this
-        // Check if background process 
-        if (command.ampersand != NULL) {
+        // Check if background process. If not, reset SIGINT to default
+        /*if (command.ampersand != NULL) {
             if (strcmp(command.ampersand, "&") == 0) {
                 printf("background pid is %d\n", getpid());
                 fflush(stdout);
             }
-        } else {
+        } else {*/
+        if (command.ampersand == NULL) {
             struct sigaction SIGINT_action = {0};
             SIGINT_action.sa_handler = SIG_DFL;
             sigaction(SIGINT, &SIGINT_action, NULL);
@@ -119,6 +120,8 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
             if (strcmp(command.ampersand, "&") == 0) {
                 // background process so don't wait for child process
                 //printf("Run in background. Child's pid = %d\n", firstChild);
+                printf("background pid is %d\n", getpid());
+                fflush(stdout);
                 pid_t childPid = waitpid(firstChild, &childStatus, WNOHANG);
                 if (childPid == 0) {
                     childProcesses[0] = firstChild;
