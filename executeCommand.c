@@ -120,7 +120,7 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
             if (strcmp(command.ampersand, "&") == 0) {
                 // background process so don't wait for child process
                 //printf("Run in background. Child's pid = %d\n", firstChild);
-                printf("background pid is %d\n", getpid());
+                printf("background pid is %d\n", firstChild);
                 fflush(stdout);
                 pid_t childPid = waitpid(firstChild, &childStatus, WNOHANG);
                 if (childPid == 0) {
