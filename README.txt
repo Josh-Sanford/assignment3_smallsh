@@ -1,1 +1,6 @@
-Josh Sanford smallsh
+To compile:
+	make
+To clean:
+	make clean
+To execute:
+	./smallsh

@@ -5,6 +5,6 @@
  * Execute the command input by the user
  * Returns the status of the child process
  */
-int executeCommand(struct commandLine command, pid_t childProcesses[100]);
+void executeCommand(struct commandLine command, pid_t childProcesses[100], int* exit_status, int* termination_signal);
 
 #endif

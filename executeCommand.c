@@ -8,30 +8,34 @@
 #include <signal.h>
 #include "storeCommand.h"
 
+#define DEBUGGING 0
+
 /*
  * Execute the command input by the user
  * Returns the status of the child process
  */
-int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
+void executeCommand(struct commandLine command, pid_t childProcesses[100], int* exit_status, int* termination_signal) {
     int childStatus = -5;
-    //printf("Parent process' pid = %d\n", getpid());
+    if (DEBUGGING == 1) {
+        printf("Parent process' pid = %d\n", getpid());
+    }
 
     // fork a child process. fork() returns the child's pid
-    // fork() returns 0 in the child process, and the child's
-    // pid in the parent process
     pid_t firstChild = fork();
     if (firstChild == -1) {
         perror("fork() failed!");
         exit(1);
     } else if (firstChild == 0) {
         // The first child process will execute this
+        if (command.arguments[0][0] == '#' || command.arguments[0][0] == '\n') {
+            exit(0);
+        }
+        // Set all child processes to ignore SIGTSTP
+        struct sigaction ignore_SIGTSTP = {0};
+        ignore_SIGTSTP.sa_handler = SIG_IGN;
+        sigaction(SIGTSTP, &ignore_SIGTSTP, NULL);
+        
         // Check if background process. If not, reset SIGINT to default
-        /*if (command.ampersand != NULL) {
-            if (strcmp(command.ampersand, "&") == 0) {
-                printf("background pid is %d\n", getpid());
-                fflush(stdout);
-            }
-        } else {*/
         if (command.ampersand == NULL) {
             struct sigaction SIGINT_action = {0};
             SIGINT_action.sa_handler = SIG_DFL;
@@ -44,12 +48,16 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
             // Open source file
             int sourceFD = open(command.input_file, O_RDONLY);
             if (sourceFD == -1) {
-                perror("source open()");
+                //perror("source open()");
+                printf("cannot open %s for input\n", command.input_file);
                 exit(1);
             }
-            // Written to terminal
-            printf("sourceFD == %d\n", sourceFD);
-            fflush(stdout);
+            
+            if (DEBUGGING == 1) {
+                // Written to terminal
+                printf("sourceFD == %d\n", sourceFD);
+                fflush(stdout);
+            }
 
             // Redirect stdin to source file
             int input_result = dup2(sourceFD, 0);
@@ -60,10 +68,13 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
         } else if (command.ampersand != NULL) {
             if (strcmp(command.ampersand, "&") == 0) {
                 // Redirect stdin to /dev/null
-                //printf("Redirecting stdin to /dev/null\n");
+                if (DEBUGGING == 1) {
+                    printf("Redirecting stdin to /dev/null\n");
+                }
                 int sourceFD = open("/dev/null", O_WRONLY);
                 if (sourceFD == -1) {
-                    perror("source open()");
+                    //perror("source open()");
+                    printf("cannot open %s for input\n", command.input_file);
                     exit(1);
                 }
 
@@ -72,7 +83,9 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
                     perror("source dup2()");
                     exit(2);
                 }
-                //printf("/dev/null sourceFD == %d\n", sourceFD);
+                if (DEBUGGING == 1) {
+                    printf("/dev/null sourceFD == %d\n", sourceFD);
+                }
             }
         }
 
@@ -81,10 +94,13 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
             // Open target file
             int targetFD = open(command.output_file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (targetFD == -1) {
-                perror("target open()");
+                //perror("target open()");
+                printf("cannot open %s for output\n", command.input_file);
                 exit(1);
             }
-            //printf("targetFD == %d\n", targetFD);
+            if (DEBUGGING == 1) {
+                printf("targetFD == %d\n", targetFD);
+            }
 
             // Redirect stdout to target file
             int output_result = dup2(targetFD, 1);
@@ -97,7 +113,8 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
                 // Redirect stdout to /dev/null
                 int targetFD = open("/dev/null", O_WRONLY);
                 if (targetFD == -1) {
-                    perror("target open()");
+                    //perror("target open()");
+                    printf("cannot open %s for output\n", command.input_file);
                     exit(1);
                 }
 
@@ -106,20 +123,27 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
                     perror("target dup2()");
                     exit(2);
                 }
-                //printf("/dev/null targetFD == %d\n", targetFD);
+                if (DEBUGGING == 1) {
+                    printf("/dev/null targetFD == %d\n", targetFD);
+                }
             }
         }
 
-        //printf("CHILD(%d) running %s command\n", getpid(), command.arguments[0]);
+        if (DEBUGGING == 1) {
+            printf("CHILD(%d) running %s command\n", getpid(), command.arguments[0]);
+        }
         execvp(command.arguments[0], command.arguments);
-        perror("excevp"); // execv only returns if there is an error
+        //perror("excevp"); // execv only returns if there is an error
+        printf("%s: no such file or directory\n", command.arguments[0]);
         exit(1);
     } else {
         // Parent process executes this to
         if (command.ampersand != NULL) {
             if (strcmp(command.ampersand, "&") == 0) {
                 // background process so don't wait for child process
-                //printf("Run in background. Child's pid = %d\n", firstChild);
+                if (DEBUGGING == 1) {
+                    printf("Run in background. Child's pid = %d\n", firstChild);
+                }
                 printf("background pid is %d\n", firstChild);
                 fflush(stdout);
                 pid_t childPid = waitpid(firstChild, &childStatus, WNOHANG);
@@ -128,7 +152,9 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
                 } else if (childProcesses[0] != NULL) {
                     childProcesses[2] = firstChild;
                 }
-                //printf("In the parent process waitpid returned value %d\n", childPid);
+                if (DEBUGGING == 1) {
+                    printf("In the parent process waitpid returned value %d\n", childPid);
+                }
                 if (childPid == 0) {
                     childStatus = childPid;
                 }
@@ -136,12 +162,32 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
         } else {
             // wait for the child process
             pid_t childPid = waitpid(firstChild, &childStatus, 0);
-            //printf("Parent process' pid = %d\n", getpid());
-            //printf("PARENT(%d): child(%d) terminated. Exiting\n", getpid(), childPid);
+            if (WIFSIGNALED(childStatus)) {
+                //printf("terminated by signal %d\n", WTERMSIG(childStatus));
+                printf("terminated by signal %d\n", WTERMSIG(childStatus));
+                fflush(stdout);
+                if (DEBUGGING == 1) {
+                    printf("Setting termination signal to %d\n", WTERMSIG(childStatus));
+                    fflush(stdout);
+                }
+                *termination_signal = WTERMSIG(childStatus);
+            } else {
+                if (DEBUGGING == 1) {
+                    printf("Setting exit status to %d\n", WEXITSTATUS(childStatus));
+                }
+                *exit_status = WEXITSTATUS(childStatus);
+                *termination_signal = 0;
+            }
+            if (DEBUGGING == 1) {
+                printf("Parent process' pid = %d\n", getpid());
+                printf("PARENT(%d): child(%d) terminated. Exiting\n", getpid(), childPid);
+            }
         }
 
-        //printf("Current child process: %d\n", childProcesses[0]);
-        //fflush(stdout);
+        if (DEBUGGING == 1) {
+            printf("Current child process: %d\n", childProcesses[0]);
+            fflush(stdout);
+        }
         if (childProcesses[0] == NULL) {
             childProcesses[0] = 1;
         }
@@ -152,12 +198,16 @@ int executeCommand(struct commandLine command, pid_t childProcesses[100]) {
                 int status;
                 pid_t checkPid = waitpid(childProcesses[index], &status, WNOHANG);
                 if (checkPid == childProcesses[index]) {
-                    printf("background pid %d is done\n", checkPid);
-                    fflush(stdout);
+                    if (WIFSIGNALED(status)) {
+                        printf("background pid %d is done: terminated by signal %d\n", checkPid, WTERMSIG(status));
+                        fflush(stdout);    
+                    } else {
+                        printf("background pid %d is done: exit value %d\n", checkPid, WEXITSTATUS(status));
+                        fflush(stdout);
+                    }
                 }
                 index += 1;
             }
         }
     }
-    return childStatus;
 }
